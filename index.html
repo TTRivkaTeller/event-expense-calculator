@@ -299,9 +299,9 @@
 
       const v = (name,cost) => ({ id: uid(), name, cost });
 
-      const [i1id, i1] = mkItem("Venue", true, false, [v("Hall",2000)]);
+      const [i1id, i1] = mkItem("Venue", true, false, [v("Hall A",2000)]);
       const [i2id, i2] = mkItem("Catering", true, true, [v("Simple Menu",45), v("Premium Menu",65)], 0);
-      const [i3id, i3] = mkItem("Photography", true, false, [v("Basic",1200), v("Full",2500)], 0);
+      const [i3id, i3] = mkItem("Photography", true, false, [v("Photographer A",1200), v("Photographer B",2500)], 0);
 
       return {
         meta: { eventName:"Sample Event", guests: 100, budget: 15000 },
