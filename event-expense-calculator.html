@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Event Budget Planner</title>
+  <style>
+    :root{
+      --bg:#fafbfc; --card:#fff; --border:#e5e7eb; --text:#111827; --muted:#6b7280;
+      --btn:#111827; --btnText:#fff; --shadow:0 1px 3px rgba(0,0,0,.06);
+      --good:#059669; --goodBg:#d1fae5; --bad:#dc2626; --badBg:#fee2e2;
+      --accent:#3b82f6; --accentBg:#dbeafe;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    body{ margin:0; background:var(--bg); color:var(--text); line-height: 1.6; }
+    .wrap{ max-width: 900px; margin: 0 auto; padding: 40px 20px 60px; }
+    
+    header{ text-align:center; margin-bottom: 48px; }
+    h1{ font-size: 28px; margin:0 0 8px; font-weight: 700; letter-spacing:-.02em; }
+    .tagline{ color:var(--muted); font-size: 16px; max-width: 500px; margin: 0 auto; }
+
+    .actions{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top: 24px; }
+    .btn{
+      border:1px solid var(--border); background:var(--card); color:var(--text);
+      padding:10px 18px; border-radius: 8px; box-shadow:var(--shadow);
+      cursor:pointer; font-size: 14px; font-weight: 500; transition: all .15s;
+    }
+    .btn:hover{ background:#f9fafb; }
+    .btn.primary{ background:var(--btn); color:var(--btnText); border-color:var(--btn); }
+    .btn.primary:hover{ background:#374151; }
+    .btn:active{ transform: translateY(1px); }
+
+    .section{ margin-bottom: 32px; }
+    .sectionTitle{ font-size: 18px; font-weight: 700; margin-bottom: 16px; color:var(--text); }
+
+    .card{ 
+      background:var(--card); border:1px solid var(--border); 
+      border-radius: 12px; padding: 24px; box-shadow:var(--shadow); 
+      margin-bottom: 20px;
+    }
+
+    .formGrid{ display:grid; gap:20px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    
+    label{ display:block; font-size: 13px; color: var(--text); font-weight: 600; margin-bottom: 6px; }
+    input[type="text"], input[type="number"]{
+      width:100%; box-sizing:border-box;
+      border:1px solid var(--border); border-radius: 8px;
+      padding:10px 12px; font-size: 15px; background:#fff;
+      transition: border-color .15s;
+    }
+    input[type="text"]:focus, input[type="number"]:focus{
+      outline: none; border-color: var(--accent);
+    }
+
+    .hint{ font-size: 13px; color: var(--muted); margin-top:6px; font-weight: 400; }
+
+    .summary{
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border:1px solid #bae6fd; border-radius: 12px;
+      padding: 24px; text-align:center;
+    }
+    .summaryLabel{ font-size: 13px; color: #0369a1; font-weight: 600; margin-bottom: 8px; }
+    .summaryValue{ font-size: 32px; font-weight: 800; color: #0c4a6e; letter-spacing:-.02em; }
+    .summaryDetail{ font-size: 14px; color: #0369a1; margin-top: 8px; }
+
+    .budgetStatus{
+      margin-top:16px; border-radius: 12px; padding:16px; 
+      border:1px solid var(--border); text-align:center;
+    }
+    .budgetStatus.good{ background: var(--goodBg); border-color:#86efac; }
+    .budgetStatus.bad{ background: var(--badBg); border-color:#fca5a5; }
+    .budgetStatus .title{ font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .budgetStatus.good .title{ color: var(--good); }
+    .budgetStatus.bad .title{ color: var(--bad); }
+    .budgetStatus .detail{ font-size: 13px; color: #374151; }
+
+    .addItemCard{
+      background:#f9fafb; border:2px dashed var(--border); 
+      border-radius: 12px; padding: 20px;
+    }
+    .addItemTitle{ font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+    .addRow{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+    .addRow .grow{ flex:1; min-width: 180px; }
+    .addRow .med{ width: 140px; }
+    .addRow .small{ width: 100px; }
+
+    .checkLabel{ 
+      display:flex; align-items:center; gap:8px; font-weight: 600;
+      cursor: pointer; user-select: none; margin-top: 24px;
+    }
+    input[type="checkbox"]{ width: 18px; height: 18px; cursor: pointer; }
+
+    .itemsList{ display:flex; flex-direction:column; gap:16px; }
+    .itemCard{
+      border:1px solid var(--border); border-radius: 12px; 
+      background:#fff; padding:20px; box-shadow:var(--shadow);
+    }
+
+    .itemHeader{
+      display:flex; gap:12px; align-items:flex-start; 
+      justify-content:space-between; margin-bottom: 12px; flex-wrap:wrap;
+    }
+    .itemTitle{ font-size: 16px; font-weight: 700; flex:1; min-width: 180px; }
+    
+    .itemControls{ display:flex; gap:8px; flex-wrap:wrap; }
+    .iconBtn{
+      border:1px solid var(--border); background:#fff; color:var(--text);
+      width: 32px; height: 32px; border-radius: 6px; cursor:pointer; 
+      display:flex; align-items:center; justify-content:center;
+      font-size: 16px; font-weight: 600; transition: all .15s;
+    }
+    .iconBtn:hover{ background:#f9fafb; }
+    .iconBtn:active{ transform: translateY(1px); }
+
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      border-radius:6px; padding:4px 10px; font-size: 12px; font-weight: 700;
+      border:1px solid var(--border); background:#f9fafb;
+    }
+    .badge.success{ color:var(--good); background:var(--goodBg); border-color:#86efac; }
+    .badge.danger{ color:var(--bad); background:var(--badBg); border-color:#fca5a5; }
+    .badge.info{ color:var(--accent); background:var(--accentBg); border-color:#93c5fd; }
+
+    .vendors{
+      margin-top:16px; padding-top:16px; border-top:1px solid var(--border);
+      display:flex; flex-direction:column; gap:12px;
+    }
+    .vendorRow{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      padding: 10px; background:#f9fafb; border-radius: 8px;
+    }
+    .vendorRow input[type="radio"]{ width: 18px; height: 18px; cursor: pointer; }
+    .vendorRow input[type="text"]{ flex:1; min-width: 180px; margin: 0; }
+    .vendorRow input[type="number"]{ width: 120px; margin: 0; }
+
+    .addVendorRow{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      padding: 10px; background:#fff; border:1px dashed var(--border); border-radius: 8px;
+    }
+    .addVendorRow input[type="text"]{ flex:1; min-width: 180px; margin: 0; }
+    .addVendorRow input[type="number"]{ width: 120px; margin: 0; }
+
+    .empty{
+      text-align:center; padding: 32px; color: var(--muted);
+      border:1px dashed var(--border); border-radius: 12px;
+      background:#fafbfc; font-size: 14px;
+    }
+
+    .listHeader{
+      font-size: 14px; font-weight: 700; margin-bottom: 12px;
+      color: var(--text); display:flex; align-items:center; gap:8px;
+    }
+    .listHeader .count{
+      display:inline-flex; align-items:center; justify-content:center;
+      background:var(--accent); color:#fff; border-radius: 12px;
+      width: 24px; height: 24px; font-size: 12px; font-weight: 700;
+    }
+
+    .footer{ 
+      margin-top: 48px; text-align:center; font-size: 13px; 
+      color: var(--muted); padding-top: 24px; border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 640px){
+      .wrap{ padding: 24px 16px 40px; }
+      h1{ font-size: 24px; }
+      .formGrid{ grid-template-columns: 1fr; }
+      .addRow{ flex-direction:column; align-items:stretch; }
+      .addRow .grow, .addRow .med, .addRow .small{ width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Event Budget Planner</h1>
+      <p class="tagline">Plan your event budget with ease. Add items, compare vendors, and stay on track.</p>
+      <div class="actions">
+        <button class="btn" id="btnReset">Load Example</button>
+        <button class="btn" id="btnExport">Export</button>
+        <button class="btn" id="btnImport">Import</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none;">
+        <button class="btn" id="btnClear">Clear All</button>
+      </div>
+    </header>
+
+    <div class="section">
+      <div class="card">
+        <div class="formGrid">
+          <div>
+            <label>Event Name</label>
+            <input id="eventName" type="text" placeholder="My Event">
+          </div>
+          <div>
+            <label>Number of Guests</label>
+            <input id="guests" type="number" min="0" placeholder="0">
+            <div class="hint">Optional - for per-guest pricing</div>
+          </div>
+          <div>
+            <label>Total Budget</label>
+            <input id="budget" type="number" min="0" placeholder="0">
+            <div class="hint">We'll show if you're over or under</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card summary">
+        <div class="summaryLabel">TOTAL COST</div>
+        <div class="summaryValue" id="grandTotal">₪0</div>
+        <div class="summaryDetail" id="perGuest"></div>
+        <div id="budgetBox" class="budgetStatus" style="display:none;">
+          <div class="title" id="budgetStatusLine"></div>
+          <div class="detail" id="budgetStatusSub"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="addItemCard">
+        <div class="addItemTitle">Add New Item</div>
+        <div class="addRow">
+          <div class="grow">
+            <label>Item Name</label>
+            <input id="newItemName" type="text" placeholder="e.g., Venue, Catering">
+          </div>
+          <div class="grow">
+            <label>Vendor (optional)</label>
+            <input id="newVendorName" type="text" placeholder="e.g., ABC Catering">
+          </div>
+          <div class="med">
+            <label>Price</label>
+            <input id="newVendorCost" type="number" min="0" placeholder="0">
+          </div>
+          <label class="checkLabel">
+            <input id="newPerGuest" type="checkbox" />
+            Per Guest
+          </label>
+          <button class="btn primary" id="btnAddItem">Add Item</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="listHeader">
+        <span>Items</span>
+        <span class="count" id="itemCount">0</span>
+      </div>
+      <div class="itemsList" id="itemsList"></div>
+      <div class="empty" id="emptyState" style="display:none;">
+        No items yet. Add your first item above to get started!
+      </div>
+    </div>
+
+    <div class="footer">
+      Your data is saved automatically in your browser
+    </div>
+  </div>
+
+  <script>
+    // ---------- Utilities ----------
+    const STORAGE_KEY = "event-budget-planner.v1";
+
+    const uid = () => (crypto && crypto.randomUUID) ? crypto.randomUUID()
+      : "id_" + Math.random().toString(16).slice(2) + "_" + Date.now();
+
+    const n0 = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n >= 0 ? n : 0;
+    };
+
+    const fmt = (n) => {
+      const rounded = Math.round(n0(n));
+      return "₪" + rounded.toLocaleString(undefined);
+    };
+
+    const getToday = () => {
+      const d = new Date();
+      return d.toISOString().split('T')[0]; // YYYY-MM-DD
+    };
+
+    // ---------- Data model ----------
+    function seedSample(){
+      const mkItem = (name, included, perGuest, vendors, selectedIdx=0) => {
+        const id = uid();
+        const vendorOrder = vendors.map(v => v.id);
+        const vendorsMap = Object.fromEntries(vendors.map(v => [v.id, v]));
+        return [id, {
+          id,
+          name,
+          included,
+          perGuest: !!perGuest,
+          vendors: vendorsMap,
+          vendorOrder,
+          selectedVendorId: vendorOrder[Math.max(0, Math.min(selectedIdx, vendorOrder.length-1))] || null
+        }];
+      };
+
+      const v = (name,cost) => ({ id: uid(), name, cost });
+
+      const [i1id, i1] = mkItem("Venue Rental", true, false, [v("Event Hall",3000)]);
+      const [i2id, i2] = mkItem("Catering", true, true, [v("Simple Menu",45), v("Premium Menu",65)], 0);
+      const [i3id, i3] = mkItem("Photography", true, false, [v("Basic Package",1200), v("Full Day",2500)], 0);
+
+      return {
+        meta: { eventName:"Sample Event", guests: 100, budget: 15000 },
+        items: { [i1id]: i1, [i2id]: i2, [i3id]: i3 },
+        order: [i1id, i2id, i3id]
+      };
+    }
+
+    function load(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(raw) return JSON.parse(raw);
+      }catch(_){}
+      return seedSample();
+    }
+    
+    function save(){
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(_){}
+    }
+
+    let state = load();
+
+    // ---------- DOM ----------
+    const el = (id) => document.getElementById(id);
+
+    const eventName = el("eventName");
+    const guests = el("guests");
+    const budget = el("budget");
+    const grandTotalEl = el("grandTotal");
+    const perGuestEl = el("perGuest");
+    const budgetBox = el("budgetBox");
+    const budgetStatusLine = el("budgetStatusLine");
+    const budgetStatusSub = el("budgetStatusSub");
+    const itemsList = el("itemsList");
+    const emptyState = el("emptyState");
+    const itemCount = el("itemCount");
+    const newItemName = el("newItemName");
+    const newVendorName = el("newVendorName");
+    const newVendorCost = el("newVendorCost");
+    const newPerGuest = el("newPerGuest");
+    const btnAddItem = el("btnAddItem");
+
+    // ---------- Cost calc ----------
+    function activeVendor(item){
+      if(!item) return null;
+      const vid = item.selectedVendorId || item.vendorOrder?.[0] || null;
+      return vid ? item.vendors?.[vid] : null;
+    }
+
+    function itemCost(item){
+      const v = activeVendor(item);
+      if(!v) return 0;
+      const base = n0(v.cost);
+      if(item.perGuest){
+        const g = n0(state.meta.guests);
+        return base * g;
+      }
+      return base;
+    }
+
+    function computeTotal(){
+      let sum = 0;
+      for(const id of state.order){
+        const it = state.items[id];
+        if(!it || !it.included) continue;
+        sum += itemCost(it);
+      }
+      return sum;
+    }
+
+    function renderTotals(){
+      const total = computeTotal();
+      grandTotalEl.textContent = fmt(total);
+
+      const g = n0(state.meta.guests);
+      if(g > 0){
+        perGuestEl.textContent = fmt(total / g) + " per guest";
+      }else{
+        perGuestEl.textContent = "";
+      }
+
+      const b = n0(state.meta.budget);
+      if(!b){
+        budgetBox.style.display = "none";
+        return;
+      }
+      
+      budgetBox.style.display = "block";
+      const diff = b - total;
+      
+      if(diff >= 0){
+        budgetBox.classList.add("good");
+        budgetBox.classList.remove("bad");
+        budgetStatusLine.textContent = "Within Budget ✓";
+        budgetStatusSub.textContent = `${fmt(diff)} remaining of ${fmt(b)} budget`;
+      }else{
+        budgetBox.classList.add("bad");
+        budgetBox.classList.remove("good");
+        budgetStatusLine.textContent = "Over Budget";
+        budgetStatusSub.textContent = `${fmt(Math.abs(diff))} over ${fmt(b)} budget`;
+      }
+    }
+
+    // ---------- Mutations ----------
+    function moveItem(id, direction){
+      const idx = state.order.indexOf(id);
+      if(idx === -1) return;
+      
+      if(direction === "up" && idx > 0){
+        [state.order[idx-1], state.order[idx]] = [state.order[idx], state.order[idx-1]];
+      }else if(direction === "down" && idx < state.order.length - 1){
+        [state.order[idx], state.order[idx+1]] = [state.order[idx+1], state.order[idx]];
+      }
+      
+      save();
+      render();
+    }
+
+    function toggleIncluded(id){
+      const it = state.items[id];
+      if(!it) return;
+      it.included = !it.included;
+      save();
+      render();
+    }
+
+    function deleteItem(id){
+      delete state.items[id];
+      state.order = state.order.filter(x => x !== id);
+      save();
+      render();
+    }
+
+    function updateItem(id, patch){
+      state.items[id] = { ...state.items[id], ...patch };
+      save();
+      render();
+    }
+
+    function updateVendor(itemId, vendorId, patch){
+      const it = state.items[itemId];
+      if(!it || !it.vendors[vendorId]) return;
+      it.vendors[vendorId] = { ...it.vendors[vendorId], ...patch };
+      save();
+      renderTotals();
+    }
+
+    function addVendor(itemId, name, cost){
+      const it = state.items[itemId];
+      if(!it) return;
+      const vid = uid();
+      it.vendors[vid] = { id: vid, name: (name || "").trim() || "New Vendor", cost: n0(cost) };
+      it.vendorOrder = [vid, ...(it.vendorOrder || [])];
+      if(!it.selectedVendorId) it.selectedVendorId = vid;
+      save();
+      render();
+    }
+
+    function deleteVendor(itemId, vendorId){
+      const it = state.items[itemId];
+      if(!it) return;
+      delete it.vendors[vendorId];
+      it.vendorOrder = (it.vendorOrder || []).filter(x => x !== vendorId);
+      if(it.selectedVendorId === vendorId){
+        it.selectedVendorId = it.vendorOrder[0] || null;
+      }
+      save();
+      render();
+    }
+
+    // ---------- UI nodes ----------
+    function itemNode(it, idx){
+      const wrap = document.createElement("div");
+      wrap.className = "itemCard";
+
+      // Header
+      const header = document.createElement("div");
+      header.className = "itemHeader";
+
+      const titleWrap = document.createElement("div");
+      titleWrap.style.flex = "1";
+      titleWrap.style.display = "flex";
+      titleWrap.style.flexDirection = "column";
+      titleWrap.style.gap = "8px";
+
+      const titleRow = document.createElement("div");
+      titleRow.style.display = "flex";
+      titleRow.style.gap = "8px";
+      titleRow.style.alignItems = "center";
+      titleRow.style.flexWrap = "wrap";
+
+      const titleEl = document.createElement("div");
+      titleEl.className = "itemTitle";
+      titleEl.textContent = it.name;
+      titleRow.appendChild(titleEl);
+
+      // Badges
+      if(!it.included){
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = "Not Included";
+        titleRow.appendChild(badge);
+      }
+
+      if(it.perGuest){
+        const badge = document.createElement("span");
+        badge.className = "badge info";
+        badge.textContent = "Per Guest";
+        titleRow.appendChild(badge);
+      }
+
+      const v = activeVendor(it);
+      if(v){
+        const cost = itemCost(it);
+        const costBadge = document.createElement("span");
+        costBadge.className = "badge success";
+        costBadge.textContent = fmt(cost);
+        titleRow.appendChild(costBadge);
+      }
+
+      titleWrap.appendChild(titleRow);
+      header.appendChild(titleWrap);
+
+      // Controls
+      const controls = document.createElement("div");
+      controls.className = "itemControls";
+
+      // Move up
+      const upBtn = document.createElement("button");
+      upBtn.className = "iconBtn";
+      upBtn.textContent = "↑";
+      upBtn.title = "Move up";
+      upBtn.disabled = idx === 0;
+      if(idx === 0) upBtn.style.opacity = "0.3";
+      upBtn.addEventListener("click", () => moveItem(it.id, "up"));
+      controls.appendChild(upBtn);
+
+      // Move down
+      const downBtn = document.createElement("button");
+      downBtn.className = "iconBtn";
+      downBtn.textContent = "↓";
+      downBtn.title = "Move down";
+      downBtn.disabled = idx === state.order.length - 1;
+      if(idx === state.order.length - 1) downBtn.style.opacity = "0.3";
+      downBtn.addEventListener("click", () => moveItem(it.id, "down"));
+      controls.appendChild(downBtn);
+
+      // Include/Exclude
+      const toggleBtn = document.createElement("button");
+      toggleBtn.className = "btn";
+      toggleBtn.style.fontSize = "13px";
+      toggleBtn.style.padding = "6px 12px";
+      toggleBtn.style.fontWeight = "600";
+      if(it.included){
+        toggleBtn.textContent = "Exclude";
+        toggleBtn.style.color = "var(--muted)";
+      }else{
+        toggleBtn.textContent = "Excluded";
+        toggleBtn.style.color = "var(--bad)";
+        toggleBtn.style.background = "var(--badBg)";
+        toggleBtn.style.borderColor = "#fca5a5";
+      }
+      toggleBtn.title = it.included ? "Click to exclude from total" : "Click to include in total";
+      toggleBtn.addEventListener("click", () => toggleIncluded(it.id));
+      controls.appendChild(toggleBtn);
+
+      // Delete
+      const delBtn = document.createElement("button");
+      delBtn.className = "iconBtn";
+      delBtn.textContent = "×";
+      delBtn.title = "Delete item";
+      delBtn.addEventListener("click", () => {
+        if(confirm(`Delete "${it.name}"?`)) deleteItem(it.id);
+      });
+      controls.appendChild(delBtn);
+
+      header.appendChild(controls);
+      wrap.appendChild(header);
+
+      // Vendors section
+      const vendorsDiv = document.createElement("div");
+      vendorsDiv.className = "vendors";
+
+      const order = it.vendorOrder || [];
+      if(order.length > 0){
+        for(const vid of order){
+          const v = it.vendors[vid];
+          if(!v) continue;
+
+          const vr = document.createElement("div");
+          vr.className = "vendorRow";
+
+          const needsSelect = order.length > 1;
+
+          if(needsSelect){
+            const r = document.createElement("input");
+            r.type = "radio";
+            r.name = "sel_" + it.id;
+            r.checked = (it.selectedVendorId === vid);
+            r.addEventListener("change", () => {
+              it.selectedVendorId = vid;
+              save();
+              render();
+            });
+            vr.appendChild(r);
+          }
+
+          const vn = document.createElement("input");
+          vn.type = "text";
+          vn.value = v.name;
+          vn.placeholder = "Vendor name";
+          vn.addEventListener("input", () => updateVendor(it.id, vid, { name: vn.value }));
+          vr.appendChild(vn);
+
+          const vc = document.createElement("input");
+          vc.type = "number";
+          vc.min = "0";
+          vc.value = v.cost;
+          vc.placeholder = "Price";
+          vc.addEventListener("input", () => updateVendor(it.id, vid, { cost: n0(vc.value) }));
+          vr.appendChild(vc);
+
+          if(order.length > 1){
+            const delV = document.createElement("button");
+            delV.className = "iconBtn";
+            delV.textContent = "×";
+            delV.title = "Remove vendor";
+            delV.addEventListener("click", () => deleteVendor(it.id, vid));
+            vr.appendChild(delV);
+          }
+
+          vendorsDiv.appendChild(vr);
+        }
+      }
+
+      // Add vendor row
+      const addRow = document.createElement("div");
+      addRow.className = "addVendorRow";
+
+      const addName = document.createElement("input");
+      addName.type = "text";
+      addName.placeholder = "Add alternative vendor";
+      addRow.appendChild(addName);
+
+      const addCost = document.createElement("input");
+      addCost.type = "number";
+      addCost.min = "0";
+      addCost.placeholder = "Price";
+      addRow.appendChild(addCost);
+
+      const addBtn = document.createElement("button");
+      addBtn.className = "btn";
+      addBtn.textContent = "+ Add";
+      addBtn.addEventListener("click", () => {
+        if(!addName.value.trim() && !String(addCost.value).trim()) return;
+        addVendor(it.id, addName.value, addCost.value);
+        addName.value = "";
+        addCost.value = "";
+      });
+      addRow.appendChild(addBtn);
+
+      vendorsDiv.appendChild(addRow);
+      wrap.appendChild(vendorsDiv);
+
+      return wrap;
+    }
+
+    function renderList(){
+      itemsList.innerHTML = "";
+      
+      if(state.order.length === 0){
+        emptyState.style.display = "block";
+        itemCount.textContent = "0";
+        return;
+      }
+
+      emptyState.style.display = "none";
+      itemCount.textContent = state.order.length;
+
+      for(let i = 0; i < state.order.length; i++){
+        const id = state.order[i];
+        const it = state.items[id];
+        if(it) itemsList.appendChild(itemNode(it, i));
+      }
+    }
+
+    function render(){
+      eventName.value = state.meta.eventName || "";
+      guests.value = state.meta.guests || "";
+      budget.value = state.meta.budget || "";
+
+      renderList();
+      renderTotals();
+    }
+
+    // ---------- Wire inputs ----------
+    eventName.addEventListener("input", () => {
+      state.meta.eventName = eventName.value;
+      save();
+    });
+    
+    guests.addEventListener("input", () => {
+      state.meta.guests = n0(guests.value);
+      save();
+      render();
+    });
+    
+    budget.addEventListener("input", () => {
+      state.meta.budget = n0(budget.value);
+      save();
+      renderTotals();
+    });
+
+    btnAddItem.addEventListener("click", () => {
+      const itemName = newItemName.value.trim();
+      if(!itemName) return;
+
+      const itemId = uid();
+      const vendorId = uid();
+      const vendorName = newVendorName.value.trim() || "Vendor";
+
+      state.items[itemId] = {
+        id: itemId,
+        name: itemName,
+        included: true,
+        perGuest: !!newPerGuest.checked,
+        vendors: { [vendorId]: { id: vendorId, name: vendorName, cost: n0(newVendorCost.value) } },
+        vendorOrder: [vendorId],
+        selectedVendorId: vendorId
+      };
+
+      state.order.unshift(itemId);
+
+      newItemName.value = "";
+      newVendorName.value = "";
+      newVendorCost.value = "";
+      newPerGuest.checked = false;
+
+      save();
+      render();
+    });
+
+    // Buttons
+    el("btnReset").addEventListener("click", () => {
+      if(confirm("Load example data? This will replace your current data.")){
+        state = seedSample();
+        save();
+        render();
+      }
+    });
+
+    el("btnClear").addEventListener("click", () => {
+      if(confirm("Clear all data? This cannot be undone.")){
+        localStorage.removeItem(STORAGE_KEY);
+        state = { meta: { eventName: "", guests: 0, budget: 0 }, items: {}, order: [] };
+        save();
+        render();
+      }
+    });
+
+    function exportJson(){
+      const eventNameStr = (state.meta.eventName || "event").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const dateStr = getToday();
+      const filename = `${eventNameStr}-${dateStr}.json`;
+      
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type:"application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    el("btnExport").addEventListener("click", exportJson);
+
+    el("btnImport").addEventListener("click", () => {
+      el("importFile").click();
+    });
+
+    el("importFile").addEventListener("change", (e) => {
+      const f = e.target.files && e.target.files[0];
+      if(!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try{
+          const parsed = JSON.parse(String(r.result || ""));
+          state = parsed;
+          save();
+          render();
+        }catch(_){
+          alert("Could not import file. Please make sure it's a valid export from this app.");
+        }
+      };
+      r.readAsText(f);
+      e.target.value = "";
+    });
+
+    // Init
+    render();
+  </script>
+</body>
+</html>
